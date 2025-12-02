@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AudioCleaner Pro</title>
+    <title>AudioCleaner</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
         
@@ -45,28 +45,16 @@
             text-shadow: 0 0 10px #00ff88;
         }
         
-        .navbar-back {
+        .download-counter {
             background: rgba(0, 255, 136, 0.1);
             border: 1px solid #00ff88;
-            color: #00ff88;
             padding: 0.5rem 1rem;
             border-radius: 4px;
-            text-decoration: none;
             font-family: 'Share Tech Mono', monospace;
             font-size: 0.9rem;
-            transition: all 0.3s ease;
+            color: #00ff88;
         }
-        
-        .navbar-back:hover {
-            background: rgba(0, 255, 136, 0.2);
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
-        }
-        
-        .navbar-right {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
+
         
         .header {
             text-align: center;
@@ -365,7 +353,7 @@
 </head>
 <body>
     <div class="header">
-        <h1 class="logo">AUDIOCLEANER PRO</h1>
+        <h1 class="logo">AUDIOCLEANER</h1>
         <p class="subtitle">Professional Real-Time Audio Noise Reduction Suite</p>
     </div>
     
@@ -451,7 +439,7 @@
         </div>
         
         <button class="process-btn" id="processBtn" disabled>
-            🎧 CLEAN AUDIO
+            CLEAN AUDIO
         </button>
         
         <div class="status" id="status">
@@ -479,28 +467,12 @@
         <button class="close-easter" onclick="closeEasterEgg()">Close</button>
     </div>
 
-    <script src="https://js.stripe.com/v3/"></script>
-    <!-- Use backend-managed download/subscription handler -->
-    <script src="download-handler.js"></script>
-    <!-- Force GitHub Pages rebuild -->
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.0/lame.min.js"></script>
 
     <!-- Navigation Bar -->
     <div class="navbar">
-        <a href="index.html" class="navbar-logo">AudioCleaner Pro</a>
-        <div class="navbar-right">
-            <div id="usageStatus" style="
-                background: rgba(0, 255, 136, 0.1);
-                border: 1px solid #00ff88;
-                padding: 10px 15px;
-                border-radius: 4px;
-                font-family: 'Share Tech Mono', monospace;
-                font-size: 0.85rem;
-                color: #00ff88;
-            "></div>
-            <a href="index.html" class="navbar-back">← Back to Hub</a>
-        </div>
+        <a href="#" class="navbar-logo">AudioCleaner Pro</a>
+        <div class="download-counter" id="downloadCounter">Files cleaned: 0</div>
     </div>
 
     <script>
@@ -839,7 +811,7 @@
             
             isProcessing = true;
             processBtn.disabled = true;
-            processBtn.textContent = '🔄 PROCESSING...';
+            processBtn.textContent = 'PROCESSING...';
             
             // Simulate processing time
             const steps = ['Analyzing audio...', 'Removing noise...', 'Enhancing clarity...', 'Finalizing...'];
@@ -867,15 +839,7 @@
             const processBtn = document.getElementById('processBtn');
             
             try {
-                // Track download (this will check limit and increment if allowed)
-                const track = await window.downloadTracker.trackDownload();
-                if (!track.success) {
-                    status.textContent = track.message || '❌ Download limit reached. Please subscribe for unlimited downloads.';
-                    window.downloadTracker.showSubscriptionPrompt();
-                    return;
-                }
-
-                status.textContent = '🎵 Processing full audio file...';
+                status.textContent = 'Processing full audio file...';
                 processBtn.disabled = true;
                 
                 const offlineContext = new OfflineAudioContext(
@@ -958,10 +922,10 @@
                 
                 source.start(0);
                 
-                status.textContent = '🔄 Rendering processed audio...';
+                status.textContent = 'Rendering processed audio...';
                 const renderedBuffer = await offlineContext.startRendering();
                 
-                status.textContent = '📦 Converting to MP3...';
+                status.textContent = 'Converting to MP3...';
                 const mp3Buffer = await audioBufferToMp3(renderedBuffer);
                 
                 const blob = new Blob([mp3Buffer], { type: 'audio/mp3' });
@@ -974,7 +938,7 @@
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
                 
-                // Usage status is updated by trackDownload function
+                incrementDownloadCounter();
                 status.textContent = '✅ MP3 download complete! Check your downloads folder.';
             } catch (error) {
                 console.error('Download error:', error);
@@ -1058,11 +1022,33 @@
         function closeEasterEgg() {
             document.getElementById('easterEgg').classList.add('hidden');
         }
+
+        // Download counter functions
+        function initializeDownloadCounter() {
+            const counter = localStorage.getItem('audiocleaner_download_count') || '0';
+            updateDownloadCounterDisplay(parseInt(counter));
+        }
+
+        function incrementDownloadCounter() {
+            const current = parseInt(localStorage.getItem('audiocleaner_download_count') || '0');
+            const newCount = current + 1;
+            localStorage.setItem('audiocleaner_download_count', newCount);
+            updateDownloadCounterDisplay(newCount);
+        }
+
+        function updateDownloadCounterDisplay(count) {
+            const counterElement = document.getElementById('downloadCounter');
+            if (counterElement) {
+                counterElement.textContent = `Files cleaned: ${count}`;
+            }
+        }
+
         // Initialize everything
         document.addEventListener('DOMContentLoaded', () => {
             initSpectrum();
             setupFileUpload();
             setupControls();
+            initializeDownloadCounter();
             
             // Set up process button
             document.getElementById('processBtn').addEventListener('click', processAudio);
